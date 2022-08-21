@@ -190,7 +190,7 @@ st.markdown('##')
 st.header("Popular Departments")
              
 q = """
-SELECT course_dept, count(course_dept) FROM api_exchanges
+SELECT course_dept, count(course_dept), ROUND(avg(price), 2) AS avg_price FROM api_exchanges
 LEFT JOIN api_courses ON api_exchanges.course_id = api_courses.uuid
 WHERE date_sold >= '""" + start_date + """' and date_sold < '""" + end_date + """' and api_exchanges.university_id = '""" + uuid_name_dict[university_option] + """'
 AND status = 2
@@ -201,8 +201,10 @@ ORDER BY(count(course_dept)) DESC;
 cur.execute(q)
 res = cur.fetchall()
 
-df_department_sold = pd.DataFrame(res, columns=["course_dept", "count"])
+df_department_sold = pd.DataFrame(res, columns=["course_dept", "count", "avg_price"])
 df_department_sold["Status"] = "Sold"
+
+df_department_sold = df_department_sold.round({'avg_price': 1})
 
 q = """
 SELECT course_dept, count(course_dept) FROM api_exchanges
@@ -230,10 +232,12 @@ df_sl_percentage = df_sl_percentage[df_sl_percentage['count_sold'] > 4]
 # adding column for sales:listing percent on new dataframe
 df_sl_percentage['Sales to Listings Ratio'] = (df_sl_percentage['count_sold'] / 
                                             df_sl_percentage['count_added']) 
+
                                 
 sl_percentage = st.selectbox('Select percentage of listed books sold', ('Show all', 
                             '0-25%', '25-50%', '50-75%', '75-100%'), index=0)
              
+st.caption('After selecting a percentage range, hover over the displayed depts to see the average price of a textbook sold in that dept.')
 
 ### KEYS
 percentage_windows = {'Show all': [0.0, 1.0],
@@ -251,13 +255,15 @@ percent_upper_limit = percentage_windows[sl_percentage][1]
 df_sl_percentage = df_sl_percentage[df_sl_percentage['Sales to Listings Ratio'] >= percent_lower_limit] 
 df_sl_percentage = df_sl_percentage[df_sl_percentage['Sales to Listings Ratio'] < percent_upper_limit]
 
-if sl_percentage != 'Show all':
-    fig = px.bar(df_sl_percentage, x='course_dept', y='count_sold', color='Status_sold', barmode='group')
-else:
+if sl_percentage == 'Show all':
     df_department = df_department_added.append(df_department_sold, ignore_index=True)
     df_department = df_department[df_department['count'] > 4]
     df_department = df_department[df_department.duplicated(subset=['course_dept'], keep=False)]
+    
     fig = px.bar(df_department, x='course_dept', y='count', color='Status', barmode='group')
+
+else:
+    fig = px.bar(df_sl_percentage, x='course_dept', y='count_sold', color='Status_sold', barmode='group', hover_data=['avg_price'])
 
 st.plotly_chart(fig)
 
@@ -333,6 +339,39 @@ sales_df = pd.DataFrame(data)
 fig = px.histogram(sales_df, x="Period", y=['Sales', 'Listings'], barmode='group')
 st.plotly_chart(fig)
 
+# Key statistics section
+q = """
+SELECT count(DISTINCT(buyer_id)) AS num_buyers, count(DISTINCT(seller_id)) AS num_sellers 
+FROM api_exchanges
+WHERE date_added >= '""" + start_date + """' and date_added< '""" + end_date + """' and api_exchanges.university_id = '""" + uuid_name_dict[university_option] + """'
+AND (status = 1 or status = 2);
+"""
+cur.execute(q)
+res = cur.fetchall()
+df_summary1 = pd.DataFrame(res, columns=["num_buyers", "num_sellers"])
+    
+st.subheader('Summary:')    
+st.write('- In total, there were ', df_summary1.iloc[0]["num_buyers"], 'buyers and ', 
+        df_summary1.iloc[0]["num_sellers"], ' sellers over this period of time.')
+                
+                
+if (df_summary1.iloc[0]["num_buyers"] == 0 or df_summary1.iloc[0]["num_sellers"] == 0):
+    st.write('- The average number of books bought and sold per buyer cannot be calculated.')
+else:
+    q = """
+    SELECT count(DISTINCT(transaction_id))/count(DISTINCT(buyer_id)) AS avg_bought,
+        count(DISTINCT(transaction_id))/count(DISTINCT(seller_id)) AS avg_sold
+        FROM api_exchanges
+        WHERE date_added >= '""" + start_date + """' and date_added< '""" + end_date + """' and api_exchanges.university_id = '""" + uuid_name_dict[university_option] + """'
+        AND status = 2;
+    """
+    cur.execute(q)
+    res = cur.fetchall()
+    df_summary2 = pd.DataFrame(res, columns=["avg_bought", "avg_sold"])
+
+    st.write('- On average, a single buyer bought ', df_summary2.iloc[0]["avg_bought"], 
+            'book(s) while a single seller sold', df_summary2.iloc[0]["avg_sold"], 
+            ' book(s) over this period of time.')
 
 
 # ind = np.arange(len(sales_df))  # the x locations for the groups
