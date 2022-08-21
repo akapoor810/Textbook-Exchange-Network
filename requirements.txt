@@ -149,8 +149,7 @@ pyasn1-modules  == 0.2.8
 pycodestyle   == 2.5.0      
 pycosat    == 0.6.3      
 pycparser  == 2.19       
-pycrypto   == 2.6.1      
-pycurl   
+pycrypto   == 2.6.1  
 pydeck   == 0.7.1      
 PyDispatcher   == 2.0.5      
 pyflakes  == 2.1.1      
