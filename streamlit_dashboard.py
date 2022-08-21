@@ -356,7 +356,7 @@ st.write('- In total, there were ', df_summary1.iloc[0]["num_buyers"], 'buyers a
                 
                 
 if (df_summary1.iloc[0]["num_buyers"] == 0 or df_summary1.iloc[0]["num_sellers"] == 0):
-    st.write('- The average number of books bought and sold per buyer cannot be calculated.')
+    st.write('- The average number of books bought and sold per buyer/seller cannot be calculated.')
 else:
     q = """
     SELECT count(date_sold)/count(DISTINCT(buyer_id)) AS avg_bought,
