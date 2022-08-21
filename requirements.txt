@@ -35,8 +35,7 @@ cloudpickle  == 0.8.0
 clyent      
 colorama  == 0.4.1      
 conda     
-conda-build    
-conda-verify      
+conda-build          
 constantly  == 15.1.0     
 contextlib2   == 0.5.5      
 cryptography  == 2.6.1      
