@@ -359,19 +359,20 @@ if (df_summary1.iloc[0]["num_buyers"] == 0 or df_summary1.iloc[0]["num_sellers"]
     st.write('- The average number of books bought and sold per buyer cannot be calculated.')
 else:
     q = """
-    SELECT count(DISTINCT(transaction_id))/count(DISTINCT(buyer_id)) AS avg_bought,
-        count(DISTINCT(transaction_id))/count(DISTINCT(seller_id)) AS avg_sold
+    SELECT count(date_sold)/count(DISTINCT(buyer_id)) AS avg_bought,
+        count(date_sold)/count(DISTINCT(seller_id)) AS avg_sold,
+        count(date_added)/count(DISTINCT(seller_id)) AS avg_listed
         FROM api_exchanges
         WHERE date_added >= '""" + start_date + """' and date_added< '""" + end_date + """' and api_exchanges.university_id = '""" + uuid_name_dict[university_option] + """'
-        AND status = 2;
+        AND (status = 1 or status = 2);
     """
     cur.execute(q)
     res = cur.fetchall()
-    df_summary2 = pd.DataFrame(res, columns=["avg_bought", "avg_sold"])
+    df_summary2 = pd.DataFrame(res, columns=["avg_bought", "avg_sold", "avg_listed"])
 
     st.write('- On average, a single buyer bought ', df_summary2.iloc[0]["avg_bought"], 
-            'book(s) while a single seller sold', df_summary2.iloc[0]["avg_sold"], 
-            ' book(s) over this period of time.')
+            'book(s) while a single seller listed ', df_summary2.iloc[0]["avg_listed"], 
+            'books and sold', df_summary2.iloc[0]["avg_sold"], ' book(s) over this period of time.')
 
 
 # ind = np.arange(len(sales_df))  # the x locations for the groups
