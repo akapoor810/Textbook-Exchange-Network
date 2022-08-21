@@ -3,7 +3,7 @@ altair == 4.2.0
 anaconda-client         
 aniso8601  == 9.0.1      
 appnope  == 0.1.0      
-appscript
+
 asn1crypto == 0.24.0     
 astor  == 0.8.1      
 astroid  == 2.2.5      
