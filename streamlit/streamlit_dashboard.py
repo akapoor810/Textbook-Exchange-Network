@@ -196,7 +196,6 @@ WHERE date_sold >= '""" + start_date + """' and date_sold < '""" + end_date + ""
 AND status = 2
 GROUP BY(course_dept)
 ORDER BY(count(course_dept)) DESC;
-
 """
 cur.execute(q)
 res = cur.fetchall()
@@ -204,16 +203,14 @@ res = cur.fetchall()
 df_department_sold = pd.DataFrame(res, columns=["course_dept", "count", "avg_price"])
 df_department_sold["Status"] = "Sold"
 
-df_department_sold = df_department_sold.round({'avg_price': 1})
 
 q = """
 SELECT course_dept, count(course_dept) FROM api_exchanges
 LEFT JOIN api_courses ON api_exchanges.course_id = api_courses.uuid
 WHERE date_added >= '""" + start_date + """' and date_added< '""" + end_date + """' and api_exchanges.university_id = '""" + uuid_name_dict[university_option] + """'
-AND status = 1 or status = 2
+AND (status = 1 or status = 2)
 GROUP BY(course_dept)
 ORDER BY(count(course_dept)) DESC;
-
 """
 
 cur.execute(q)
@@ -249,7 +246,6 @@ percentage_windows = {'Show all': [0.0, 1.0],
 percent_lower_limit = percentage_windows[sl_percentage][0]
 percent_upper_limit = percentage_windows[sl_percentage][1]
 
-#df_sl_percentage = df_sl_percentage[df_sl_percentage.duplicated(subset=['course_dept'], keep=False)]               
 
 # filtering based on sales:listings percent    
 df_sl_percentage = df_sl_percentage[df_sl_percentage['Sales to Listings Ratio'] >= percent_lower_limit] 
@@ -310,7 +306,6 @@ for key, value in sql_windows.items() :
                 num_listings.append(0)
                 val_listings.append(0)
 
-
 num_sales = [x if x != None else 0 for x in num_sales]
 num_listings = [x if x != None else 0 for x in num_listings]
 
@@ -326,7 +321,6 @@ if(total_type == 'Value of Books ($)'):
             'Sales': val_sales,
             'Listings': val_listings,
             }
-
 else:
     data = {
             'Period': seasons,
@@ -339,40 +333,69 @@ sales_df = pd.DataFrame(data)
 fig = px.histogram(sales_df, x="Period", y=['Sales', 'Listings'], barmode='group')
 st.plotly_chart(fig)
 
-# Key statistics section
+
+# Summary statistics section
 q = """
-SELECT count(DISTINCT(buyer_id)) AS num_buyers, count(DISTINCT(seller_id)) AS num_sellers 
+SELECT count(DISTINCT(buyer_id)) AS num_buyers, count(DISTINCT(seller_id)) AS num_sellers,
+CASE
+    WHEN count(DISTINCT(buyer_id)) > 0 THEN count(date_sold)/count(DISTINCT(buyer_id)) 
+    WHEN count(DISTINCT(buyer_id)) = 0 THEN 0
+    END AS avg_bought,
+CASE
+    WHEN count(DISTINCT(seller_id)) > 0 THEN count(date_sold)/count(DISTINCT(seller_id)) 
+    WHEN count(DISTINCT(seller_id)) = 0 THEN 0
+    END AS avg_sold,
+CASE
+    WHEN count(DISTINCT(seller_id)) > 0 THEN count(date_added)/count(DISTINCT(seller_id)) 
+    WHEN count(DISTINCT(seller_id)) = 0 THEN 0
+    END AS avg_listed
 FROM api_exchanges
-WHERE date_added >= '""" + start_date + """' and date_added< '""" + end_date + """' and api_exchanges.university_id = '""" + uuid_name_dict[university_option] + """'
+WHERE date_added >= '""" + start_date + """' and date_added< '""" + end_date + """' and date_sold >= '""" + start_date + """' AND date_sold < '""" + end_date + """' and university_id = '""" + uuid_name_dict[university_option] + """'
 AND (status = 1 or status = 2);
 """
 cur.execute(q)
 res = cur.fetchall()
-df_summary1 = pd.DataFrame(res, columns=["num_buyers", "num_sellers"])
+df_summary = pd.DataFrame(res, columns=["num_buyers", "num_sellers", "avg_bought", "avg_sold", "avg_listed"])
     
 st.subheader('Summary:')    
-st.write('- In total, there were ', df_summary1.iloc[0]["num_buyers"], 'buyers and ', 
-        df_summary1.iloc[0]["num_sellers"], ' sellers over this period of time.')
-                
-                
-if (df_summary1.iloc[0]["num_buyers"] == 0 or df_summary1.iloc[0]["num_sellers"] == 0):
-    st.write('- The average number of books bought and sold per buyer/seller cannot be calculated.')
-else:
-    q = """
-    SELECT count(date_sold)/count(DISTINCT(buyer_id)) AS avg_bought,
-        count(date_sold)/count(DISTINCT(seller_id)) AS avg_sold,
-        count(date_added)/count(DISTINCT(seller_id)) AS avg_listed
-        FROM api_exchanges
-        WHERE date_added >= '""" + start_date + """' and date_added< '""" + end_date + """' and api_exchanges.university_id = '""" + uuid_name_dict[university_option] + """'
-        AND (status = 1 or status = 2);
-    """
-    cur.execute(q)
-    res = cur.fetchall()
-    df_summary2 = pd.DataFrame(res, columns=["avg_bought", "avg_sold", "avg_listed"])
+st.write('- In total, there were ', df_summary.iloc[0]["num_buyers"], 'buyers and ', 
+        df_summary.iloc[0]["num_sellers"], ' sellers over this period of time.')
+        
+st.write('- On average, a single buyer bought ', df_summary.iloc[0]["avg_bought"], 
+        'book(s) while a single seller listed ', df_summary.iloc[0]["avg_listed"], 
+        'books and sold', df_summary.iloc[0]["avg_sold"], ' book(s) over this period of time.')
+    
 
-    st.write('- On average, a single buyer bought ', df_summary2.iloc[0]["avg_bought"], 
-            'book(s) while a single seller listed ', df_summary2.iloc[0]["avg_listed"], 
-            'books and sold', df_summary2.iloc[0]["avg_sold"], ' book(s) over this period of time.')
+
+q = """
+WITH num_added_sold AS (
+SELECT count(transaction_id) AS books_added_sold
+FROM api_exchanges
+WHERE date_added >= '""" + start_date + """' and date_added< '""" + end_date + """' and date_sold >= '""" + start_date + """' AND date_sold < '""" + end_date + """' and university_id = '""" + uuid_name_dict[university_option] + """'
+AND status = 2
+),
+ 
+num_added AS (
+SELECT count(transaction_id) AS books_added
+FROM api_exchanges
+WHERE (date_added >= '""" + start_date + """' and date_added < '""" + end_date + """' and university_id = '""" + uuid_name_dict[university_option] + """')
+AND (status = 1 or status = 2)
+)
+
+SELECT
+CASE
+    WHEN books_added = 0 THEN 0
+    WHEN books_added > 0 THEN ROUND(((books_added_sold * 100.0)/ books_added), 1) 
+    END AS turnover_rate
+FROM num_added_sold, num_added
+"""
+
+
+cur.execute(q)
+res = cur.fetchall()
+df_summary["turnover_rate"] = pd.DataFrame(res, columns=["turnover_rate"])
+
+st.write("- Approximately ", df_summary.iloc[0]["turnover_rate"], "% of books listed during this period of time were sold.")
 
 
 # ind = np.arange(len(sales_df))  # the x locations for the groups
