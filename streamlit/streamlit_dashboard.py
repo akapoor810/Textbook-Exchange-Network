@@ -231,7 +231,7 @@ df_sl_percentage['Sales to Listings Ratio'] = (df_sl_percentage['count_sold'] /
                                             df_sl_percentage['count_added']) 
 
                                 
-sl_percentage = st.selectbox('Select percentage of listed books sold', ('Show all', 
+sl_percentage = st.selectbox('Select percentage of listed books that were sold', ('Show all', 
                             '0-25%', '25-50%', '50-75%', '75-100%'), index=0)
              
 st.caption('After selecting a percentage range, hover over the displayed depts to see the average price of a textbook sold in that dept.')
@@ -334,7 +334,9 @@ fig = px.histogram(sales_df, x="Period", y=['Sales', 'Listings'], barmode='group
 st.plotly_chart(fig)
 
 
-# Summary statistics section
+#########################################
+st.header("Summary")
+
 q = """
 SELECT count(DISTINCT(buyer_id)) AS num_buyers, count(DISTINCT(seller_id)) AS num_sellers,
 CASE
@@ -357,7 +359,6 @@ cur.execute(q)
 res = cur.fetchall()
 df_summary = pd.DataFrame(res, columns=["num_buyers", "num_sellers", "avg_bought", "avg_sold", "avg_listed"])
     
-st.subheader('Summary:')    
 st.write('- In total, there were ', df_summary.iloc[0]["num_buyers"], 'buyers and ', 
         df_summary.iloc[0]["num_sellers"], ' sellers over this period of time.')
         
