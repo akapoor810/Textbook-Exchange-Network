@@ -49,12 +49,12 @@ sql_windows = {'Fa-Open-2017': ['2017-07-01', '2017-10-01'],
             }
 
 uuid_name_dict = dict({'Brandeis University': '5d6afd8d-1184-4c7f-ba23-bee36a42f3d0',
+        'University of Connecticut' : '7223e991-f17a-4238-8563-a25d2a8ef1a0',
+        'Northeastern University' : '38f6eab1-0e9d-4014-b2c2-49664d750b6d',
         'The Ohio State University': 'e7e7d205-106f-4e18-879b-47d5b70f906b',
         'University of Oxford': '2f6051c4-08a3-4e9e-bf4d-0402b8a96a5b',
-        'Wesleyan University' : 'b2f08514-ccb6-4663-843d-6dbb9b0c9a2f' ,
-        'Northeastern University' : '38f6eab1-0e9d-4014-b2c2-49664d750b6d',
         'Tufts University' : '298ec884-3abc-435b-bbcc-ff84f4c88d08',
-        'University of Connecticut' : '7223e991-f17a-4238-8563-a25d2a8ef1a0'})
+        'Wesleyan University' : 'b2f08514-ccb6-4663-843d-6dbb9b0c9a2f'})
 
 
 st.set_page_config(page_title="TEN Analytics Dashboard", page_icon=":bar_chart:", layout="wide")
@@ -71,7 +71,7 @@ st.sidebar.header("Filter Your Data")
 
 
 
-university_option = st.sidebar.selectbox('University',('Wesleyan University', 'Tufts University', 'University of Connecticut'))
+university_option = st.sidebar.selectbox('University',('Tufts University', 'University of Connecticut', 'Wesleyan University'))
 start_season = st.sidebar.selectbox('Season Start',
     ('Fa-Open-2017', 'Fa-Close-2017', 
     'Sp-Open-2018', 'Sp-Close-2018', 
@@ -95,8 +95,8 @@ end_season = st.sidebar.selectbox('Season End',
     'Fa-Open-2020','Fa-Close-2020',
     'Sp-Open-2021', 'Sp-Close-2021',
     'Fa-Open-2021','Fa-Close-2021',
-    'Sp-Open-2022', 'Sp-Close-2022'
-    ))
+    'Sp-Open-2022', 'Sp-Close-2022'),
+    index=19)
      
 start_date = sql_windows[start_season][0]
 end_date = sql_windows[end_season][1]
@@ -124,6 +124,8 @@ col1, col2 = st.columns(2)
 col1.metric(label="Total $ Sales", value="$" + str(total), delta=None)
 col2.metric(label="Total Savings", value="$" + str(round(total * 1.895)), delta=None)
 
+
+#Transaction Type Breakdown
 q = """SELECT Seller_payment_type, Buyer_payment_type, COUNT(*) AS count_name
 FROM api_exchanges
 WHERE date_sold >= '""" + start_date + """' and date_sold < '""" + end_date + """' and university_id = '""" + uuid_name_dict[university_option] + """'
@@ -143,8 +145,8 @@ st.header(university_option + ' Transaction Type Breakdown')
 fig = px.pie(df, values='count', names='transaction_type')
 st.plotly_chart(fig)
 
-
-
+st.caption('**Explanation:** This graph can be used to identify the most common types of payment for sellers and buyers.')
+st.markdown('##')
 
 
 st.header("Textbook Price Distribution")
@@ -183,6 +185,7 @@ fig = px.histogram(prices_df, barmode='overlay', nbins=10)
 # fig.show()
 st.plotly_chart(fig)
 
+st.caption('**Explanation:** This graph can be used to identify which price ranges books are most commonly listed and sold within. This allows TEN to work towards building a price recommendation model to help sellers find the most effective price for their books to ensure that they can spend the least amount of time in inventory.')
 st.markdown('##')
 
 
@@ -222,16 +225,16 @@ df_department_added["Status"] = "Listed"
 # creating new dataframe by joining both dataframes on course_dept column
 df_sl_percentage = df_department_sold.join(
                           df_department_added.set_index('course_dept'), 
-                          on='course_dept', lsuffix='_sold', rsuffix='_added')
+                          on='course_dept', lsuffix='_sold', rsuffix='_listed')
 
 df_sl_percentage = df_sl_percentage[df_sl_percentage['count_sold'] > 4]
 
 # adding column for sales:listing percent on new dataframe
 df_sl_percentage['Sales to Listings Ratio'] = (df_sl_percentage['count_sold'] / 
-                                            df_sl_percentage['count_added']) 
+                                            df_sl_percentage['count_listed']) 
 
                                 
-sl_percentage = st.selectbox('Select percentage of listed books that were sold', ('Show all', 
+sl_percentage = st.selectbox('Select the range of listed books that were sold', ('Show all', 
                             '0-25%', '25-50%', '50-75%', '75-100%'), index=0)
              
 st.caption('After selecting a percentage range, hover over the displayed depts to see the average price of a textbook sold in that dept.')
@@ -263,6 +266,9 @@ else:
 
 st.plotly_chart(fig)
 
+st.caption('**Example Interpretation:** At Tufts University, between Fall 2017 Opening and Spring 2022 Closing, between 75-100% of the books listed in the Chemistry department were sold. The average price for a book sold was $35.39.')
+st.caption('**Explanation:** This graph can be used to identify which departments have the highest yield for textbook sales. This gives TEN insight into which departments to focus advertising on, which can include reaching out to professors, department chairs, department newsletters, and clubs that cater to students majoring in relevant subjects.')
+st.markdown('##')
 
 #########################################
 st.header("Total Sales and Listings by Season")
