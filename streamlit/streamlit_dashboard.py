@@ -145,7 +145,7 @@ st.header(university_option + ' Transaction Type Breakdown')
 fig = px.pie(df, values='count', names='transaction_type')
 st.plotly_chart(fig)
 
-st.caption('**Explanation:** This graph can be used to identify the most common types of payment for sellers and buyers.')
+st.caption('**Explanation:** This graph can be used to identify the payment types most commonly preferred by sellers and buyers.')
 st.markdown('##')
 
 
@@ -234,7 +234,7 @@ df_sl_percentage['Sales to Listings Ratio'] = (df_sl_percentage['count_sold'] /
                                             df_sl_percentage['count_listed']) 
 
                                 
-sl_percentage = st.selectbox('Select the range of listed books that were sold', ('Show all', 
+sl_percentage = st.selectbox('Select the range of listed books that were sold to view a dept breakdown', ('Show all', 
                             '0-25%', '25-50%', '50-75%', '75-100%'), index=0)
              
 st.caption('After selecting a percentage range, hover over the displayed depts to see the average price of a textbook sold in that dept.')
@@ -267,7 +267,7 @@ else:
 st.plotly_chart(fig)
 
 st.caption('**Example Interpretation:** At Tufts University, between Fall 2017 Opening and Spring 2022 Closing, between 75-100% of the books listed in the Chemistry department were sold. The average price for a book sold was $35.39.')
-st.caption('**Explanation:** This graph can be used to identify which departments have the highest yield for textbook sales. This gives TEN insight into which departments to focus advertising on, which can include reaching out to professors, department chairs, department newsletters, and clubs that cater to students majoring in relevant subjects.')
+st.caption('**Explanation:** This graph can be used to identify which departments have the highest yield for textbook sales. This gives TEN insight into which departments to focus advertising on, which can include reaching out to professors, department newsletters, and relevant clubs.')
 st.markdown('##')
 
 #########################################
@@ -327,17 +327,25 @@ if(total_type == 'Value of Books ($)'):
             'Sales': val_sales,
             'Listings': val_listings,
             }
+            
+    sales_df = pd.DataFrame(data)
+    fig = px.histogram(sales_df, x="Period", y=['Sales', 'Listings'], barmode='group').update_layout(yaxis_title="value of books ($)")
+    
 else:
     data = {
             'Period': seasons,
             'Sales': num_sales,
             'Listings': num_listings,
             }
+                    
+    sales_df = pd.DataFrame(data)
+    fig = px.histogram(sales_df, x="Period", y=['Sales', 'Listings'], barmode='group').update_layout(yaxis_title="number of books")
 # 
 # 
-sales_df = pd.DataFrame(data)
-fig = px.histogram(sales_df, x="Period", y=['Sales', 'Listings'], barmode='group')
 st.plotly_chart(fig)
+
+st.caption('**Explanation:** This graph can be used to identify high listing periods and understand how we can use them to predict high selling periods, and vice versa. These insights will help TEN adequately prepare volunteers for particularly busy periods.')
+st.markdown('##')
 
 
 #########################################
