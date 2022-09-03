@@ -234,7 +234,7 @@ df_sl_percentage['Sales to Listings Ratio'] = (df_sl_percentage['count_sold'] /
                                             df_sl_percentage['count_listed']) 
 
                                 
-sl_percentage = st.selectbox('Select the range of listed books that were sold to view a dept breakdown', ('Show all', 
+sl_percentage = st.selectbox('Select the range of listed books that were sold to view a breakdown of departments', ('Show all', 
                             '0-25%', '25-50%', '50-75%', '75-100%'), index=0)
              
 st.caption('After selecting a percentage range, hover over the displayed depts to see the average price of a textbook sold in that dept.')
