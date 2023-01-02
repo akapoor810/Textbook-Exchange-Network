@@ -1,3 +1,4 @@
+
 import streamlit as st
 import psycopg2
 import pandas as pd
@@ -396,7 +397,6 @@ FROM api_exchanges
 WHERE (date_added >= '""" + start_date + """' and date_added < '""" + end_date + """' and university_id = '""" + uuid_name_dict[university_option] + """')
 AND (status = 1 or status = 2)
 )
-
 SELECT
 CASE
     WHEN books_added = 0 THEN 0
@@ -435,4 +435,3 @@ st.write("- Approximately ", df_summary.iloc[0]["turnover_rate"], "% of books li
 
 
 # number of buyers, number of sellers, average books for buyer, average book for seller
-
