@@ -1,7 +1,8 @@
-# Anika Kapoor and Kelsey Yew
 # Textbook-Exchange-Network
-# Summer 2022 project
-# README
+
+Anika Kapoor and Kelsey Yew
+Summer 2022 project
+README
 
 Launch: https://akapoor810-ten-streamlitstreamlit-dashboard-hv14vk.streamlit.app
 
