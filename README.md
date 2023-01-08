@@ -9,7 +9,7 @@ README
 Launch: https://akapoor810-ten-streamlitstreamlit-dashboard-hv14vk.streamlit.app
 
 Purpose: The objective of this KPI analytics dashboard is to provide stakeholders including Board Members, Operations Team, school representatives, etc. 
-         with insight on the health and wellness of the TEN program both as a whole and by university.
+         with insight on the health and wellness of the Textbook Exchange Network (TEN) program both as a whole and by university.
          
 Metrics included (each filtered by school, start date, and end date)
 - Number of textbook buyers and sellers
@@ -20,3 +20,5 @@ Metrics included (each filtered by school, start date, and end date)
 - Total sales and listing by season
 
 Language used: Python, with data taken from SQL datasets in Heroku
+
+Learn more about TEN: https://www.textbookexchangenetwork.com
